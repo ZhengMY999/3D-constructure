@@ -8,8 +8,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/core/core.hpp>
 #include <iostream>
-
-#include <iostream>
+#include "thinImage.h"
 
 using namespace std;
 using namespace cv;
@@ -106,13 +105,18 @@ int main() {
     left_resize= imagePreprocess(left_resize);
 
 
-    Mat horizontal_left = getVertical(left_resize);
-    Mat horizontal_right = getVertical(right_resize);
+    Mat horizontal_left = getHorizontal(left_resize);
+    Mat horizontal_right = getHorizontal(right_resize);
 
+    //细化骨架
+    cv::Mat dst = thinImage(horizontal_left);
+    dst = dst * 255;
 
-    Mat goodMatch_horizontal= matching_pictures(horizontal_left,horizontal_right);
+    imshow("horizontal left",horizontal_left);
+    imshow("thin image",dst);
+//    Mat goodMatch_horizontal= matching_pictures(horizontal_left,horizontal_right);
 
-    imshow("优化后匹配点对", goodMatch_horizontal);
+//    imshow("优化后匹配点对", goodMatch_horizontal);
 
     cv::waitKey(0);
 }

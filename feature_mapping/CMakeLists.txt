@@ -17,7 +17,7 @@ include_directories(
         "/usr/include/eigen3/"
 )
 
-add_executable( feature_mapping feature_mapping.cpp)
+add_executable( feature_mapping feature_mapping.cpp thinImage.cpp thinImage.h)
 target_link_libraries( feature_mapping ${OpenCV_LIBS} )
 
 
