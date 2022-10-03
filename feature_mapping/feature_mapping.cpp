@@ -86,6 +86,84 @@ Mat matching_pictures(Mat src1,Mat src2){
     drawMatches(src1, keypoints_1, src2, keypoints_2, good_matches, img_goodmatch);
     return img_goodmatch;
 }
+/// <summary>
+/// SIFT算法进行特征提取及匹配  10.4 添加
+/// </summary>
+/// <param name="image1"></param>
+/// <param name="image2"></param>
+void sift(Mat image1, Mat image2) {
+    int64 t1=0, t2=0;
+    double tkpt, tdes, tmatch_bf, tmatch_knn;
+
+    // 1. 读取图片
+    //const cv::Mat image1 = cv::imread("../../images/1.png", 0); //Load as grayscale
+    //const cv::Mat image2 = cv::imread("../../images/2.png", 0); //Load as grayscale
+    std::vector<cv::KeyPoint> keypoints1;
+    std::vector<cv::KeyPoint> keypoints2;
+
+    Ptr<cv::SiftFeatureDetector> sift = cv::SiftFeatureDetector::create();
+    // 2. 计算特征点
+    t1 = cv::getTickCount();
+    sift->detect(image1, keypoints1);
+    t2 = cv::getTickCount();
+    tkpt = 1000.0 * (t2 - t1) / cv::getTickFrequency();
+    sift->detect(image2, keypoints2);
+
+   //计算匹配符
+    //
+    Mat descriptors1;
+    Mat descriptors2;
+    t1 = cv::getTickCount();
+    sift->compute(image1, keypoints1, descriptors1);
+    t2 = cv::getTickCount();
+    tdes = 1000.0 * (t2 - t1) / cv::getTickFrequency();
+    sift->compute(image2, keypoints2, descriptors2);
+
+    // 4. 特征匹配
+    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::BRUTEFORCE);
+    // cv::BFMatcher matcher(cv::NORM_L2);
+
+    // (1) 直接暴力匹配
+    std::vector<cv::DMatch> matches;
+    t1 = cv::getTickCount();
+    matcher->match(descriptors1, descriptors2, matches);
+    t2 = cv::getTickCount();
+    tmatch_bf = 1000.0 * (t2 - t1) / cv::getTickFrequency();
+    // 画匹配图
+    cv::Mat img_matches_bf;
+    drawMatches(image1, keypoints1, image2, keypoints2, matches, img_matches_bf);
+    imshow("bf_matches", img_matches_bf);
+
+    
+    std::vector<std::vector<DMatch> > knn_matches;
+    const float ratio_thresh = 0.7f;
+    std::vector<DMatch> good_matches;
+    t1 = getTickCount();
+    matcher->knnMatch(descriptors1, descriptors2, knn_matches, 2);
+    for (auto& knn_matche : knn_matches) {
+        if (knn_matche[0].distance < ratio_thresh * knn_matche[1].distance) {
+            good_matches.push_back(knn_matche[0]);
+        }
+    }
+    t2 = getTickCount();
+    tmatch_knn = 1000.0 * (t2 - t1) / getTickFrequency();
+
+    // 画匹配图
+    cv::Mat img_matches_knn;
+    drawMatches(image1, keypoints1, image2, keypoints2, good_matches, img_matches_knn, cv::Scalar::all(-1),
+        cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+    cv::imshow("knn_matches", img_matches_knn);
+    cv::waitKey(0);
+
+
+
+    cv::Mat output;
+    cv::drawKeypoints(image1, keypoints1, output);
+    cv::imwrite("sift_image1_keypoints",output);
+    cv::drawKeypoints(image2, keypoints2, output);
+    cv::imwrite("sift_image2_keypoints", output);
+    
+}
 int main() {
 
     Mat image_left = imread("/home/wangzha/Desktop/3D-constructure/resources/left.bmp", IMREAD_GRAYSCALE);
