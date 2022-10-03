@@ -15,5 +15,5 @@ Mat getHorizontal(Mat src);
 
 Mat getVertical(Mat src);
 Mat matching_pictures(Mat src1,Mat src2);
-
+void sift(Mat image1, Mat image2);
 #endif //FEATURE_MAPPING_FEATURE_MAPPING_H
