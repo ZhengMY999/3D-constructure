@@ -1,4 +1,4 @@
-#include "feature_extraction.h"
+ï»¿#include "feature_extraction.h"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
@@ -8,26 +8,26 @@
 using namespace std;
 using namespace cv;
 /// <summary>
-/// ±Õ²Ù×÷
+/// é—­æ“ä½œ
 /// </summary>
-/// <param name="src=Ô´Í¼Ïñ"></param>
-/// <param name="method=kernelÀàĞÍ£¬0ÎªË®Æ½½á¹¹£¬1Îª´¹Ö±½á¹¹£¬3Îª¾ØĞÎ½á¹¹"></param>
-/// <param name="ksize=kernel´óĞ¡"></param>
+/// <param name="src=æºå›¾åƒ"></param>
+/// <param name="method=kernelç±»å‹ï¼Œ0ä¸ºæ°´å¹³ç»“æ„ï¼Œ1ä¸ºå‚ç›´ç»“æ„ï¼Œ3ä¸ºçŸ©å½¢ç»“æ„"></param>
+/// <param name="ksize=kernelå¤§å°"></param>
 /// <returns></returns>
-Mat close_operation(Mat src,int method=2,int ksize=3) {   // ±Õ²Ù×÷
+Mat close_operation(Mat src,int method=2,int ksize=3) {   // é—­æ“ä½œ
     Mat  dst;
-    //Ë®Æ½½á¹¹ÔªËØ
+    //æ°´å¹³ç»“æ„å…ƒç´ 
     //Mat hline = getStructuringElement(MORPH_RECT, Size(src.cols / 16, 1),
         //Point(-1, -1));
     Mat hline = getStructuringElement(MORPH_RECT, Size(ksize, 1),
         Point(-1, -1));
-    //´¹Ö±½á¹¹ÔªËØ
+    //å‚ç›´ç»“æ„å…ƒç´ 
     //Mat vline = getStructuringElement(MORPH_RECT, Size(1, src.rows / 16),
        // Point(-1, -1));
     Mat vline = getStructuringElement(MORPH_RECT, Size(1, ksize),
         Point(-1, -1));
       
-    // ¾ØĞÎ½á¹¹
+    // çŸ©å½¢ç»“æ„
     Mat kernel = getStructuringElement(MORPH_RECT, Size(ksize, ksize),
         Point(-1, -1));
 
@@ -40,7 +40,7 @@ Mat close_operation(Mat src,int method=2,int ksize=3) {   // ±Õ²Ù×÷
     dilate(src, temp, kernel);
     erode(temp, dst, kernel);
 
-    //imshow("±Õ²Ù×÷ºó½á¹û", dst);
+    //imshow("é—­æ“ä½œåç»“æœ", dst);
     return dst;
 }
 /// <summary>
@@ -49,46 +49,46 @@ Mat close_operation(Mat src,int method=2,int ksize=3) {   // ±Õ²Ù×÷
 /// <param name="src"></param>
 /// <returns></returns>
 Mat get_joints(Mat src, int scale_H, int scale_V) {
-    Mat binImg;   //¶şÖµ»¯
-    GaussianBlur(src, src, Size(5, 5), 1);   //¸ßË¹ÂË²¨
+    Mat binImg;   //äºŒå€¼åŒ–
+    GaussianBlur(src, src, Size(5, 5), 1);   //é«˜æ–¯æ»¤æ³¢
     adaptiveThreshold(src, binImg, 255,
-        ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);  //Ô­Ê¼Öµ-2
+        ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);  //åŸå§‹å€¼-2
 
     
-    binImg= close_operation(binImg);//±Õ²Ù×÷
+    binImg= close_operation(binImg);//é—­æ“ä½œ
     //imshow("binary image", binImg);
 
 
-    //Ê¹ÓÃ¶şÖµ»¯ºóµÄÍ¼ÏñÀ´»ñÈ¡±í¸ñºá×İµÄÏß
+    //ä½¿ç”¨äºŒå€¼åŒ–åçš„å›¾åƒæ¥è·å–è¡¨æ ¼æ¨ªçºµçš„çº¿
     Mat horizontal = binImg.clone();
     Mat vertical = binImg.clone();
 
-    //int scale_H = 140; //Õâ¸öÖµÔ½´ó£¬¼ì²âµ½µÄÖ±ÏßÔ½¶à
-    //int scale_V = 60; //Õâ¸öÖµÔ½´ó£¬¼ì²âµ½µÄÖ±ÏßÔ½¶à
-    //int scale_H = 120; //Õâ¸öÖµÔ½´ó£¬¼ì²âµ½µÄºáÏßÔ½¶à
-    //int scale_V = 100; //Õâ¸öÖµÔ½´ó£¬¼ì²âµ½µÄÊúÏßÔ½¶à
+    //int scale_H = 140; //è¿™ä¸ªå€¼è¶Šå¤§ï¼Œæ£€æµ‹åˆ°çš„ç›´çº¿è¶Šå¤š
+    //int scale_V = 60; //è¿™ä¸ªå€¼è¶Šå¤§ï¼Œæ£€æµ‹åˆ°çš„ç›´çº¿è¶Šå¤š
+    //int scale_H = 120; //è¿™ä¸ªå€¼è¶Šå¤§ï¼Œæ£€æµ‹åˆ°çš„æ¨ªçº¿è¶Šå¤š
+    //int scale_V = 100; //è¿™ä¸ªå€¼è¶Šå¤§ï¼Œæ£€æµ‹åˆ°çš„ç«–çº¿è¶Šå¤š
 
 
     int horizontalsize = horizontal.cols / scale_H;
-    // ÎªÁË»ñÈ¡ºáÏòµÄ±í¸ñÏß£¬ÉèÖÃ¸¯Ê´ºÍÅòÕÍµÄ²Ù×÷ÇøÓòÎªÒ»¸ö±È½Ï´óµÄºáÏòÖ±Ìõ
+    // ä¸ºäº†è·å–æ¨ªå‘çš„è¡¨æ ¼çº¿ï¼Œè®¾ç½®è…èš€å’Œè†¨èƒ€çš„æ“ä½œåŒºåŸŸä¸ºä¸€ä¸ªæ¯”è¾ƒå¤§çš„æ¨ªå‘ç›´æ¡
     Mat horizontalStructure = getStructuringElement(MORPH_RECT, Size(horizontalsize, 1));
-    // ÏÈ¸¯Ê´ÔÙÅòÕÍ
+    // å…ˆè…èš€å†è†¨èƒ€
     erode(horizontal, horizontal, horizontalStructure, Point(-1, -1));
     dilate(horizontal, horizontal, horizontalStructure, Point(-1, -1));
-    horizontal = close_operation(horizontal,0,5);//±Õ²Ù×÷
-    horizontal = close_operation(horizontal, 0, 7);//±Õ²Ù×÷
+    horizontal = close_operation(horizontal,0,5);//é—­æ“ä½œ
+    horizontal = close_operation(horizontal, 0, 7);//é—­æ“ä½œ
     //imshow("horizontal", horizontal);
 
     int verticalsize = vertical.rows / scale_V;
     Mat verticalStructure = getStructuringElement(MORPH_RECT, Size(1, verticalsize));
     erode(vertical, vertical, verticalStructure, Point(-1, -1));
     dilate(vertical, vertical, verticalStructure, Point(-1, -1));
-    vertical = close_operation(vertical, 1, 5);//±Õ²Ù×÷
-    vertical = close_operation(vertical, 1, 7);//±Õ²Ù×÷
+    vertical = close_operation(vertical, 1, 5);//é—­æ“ä½œ
+    vertical = close_operation(vertical, 1, 7);//é—­æ“ä½œ
     //imshow("vertical", vertical);
 
    
-    /*Mat dst1;                        //ÀûÓÃÑÚÄ¤²Ù×÷¶ÔÔ­Ê¼Í¼Ïñ¹âÌõ½øĞĞÌáÈ¡
+    /*Mat dst1;                        //åˆ©ç”¨æ©è†œæ“ä½œå¯¹åŸå§‹å›¾åƒå…‰æ¡è¿›è¡Œæå–
     dst1 = mask(src, horizontal);
     imshow("horizontal", dst1);
     Mat dst2;
@@ -96,7 +96,7 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     dst2 = mask(src, vertical);
     imshow("vertical", dst2);
 */
-    //Í¼ÏñÏ¸»¯£¬¹Ç÷À»¯  
+    //å›¾åƒç»†åŒ–ï¼Œéª¨éª¼åŒ–  
     cv::Mat dst1;
     cvHilditchThin1(horizontal, dst1);
     //imshow("dst1", dst1);
@@ -115,11 +115,11 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
 
     
 
-    Mat joints;   //»ñÈ¡½»µã
+    Mat joints;   //è·å–äº¤ç‚¹
     bitwise_and(horizontal, vertical, joints);
     bitwise_and(dst1, dst2, joints);
 
-    joints = close_operation(joints);//±Õ²Ù×÷
+    joints = close_operation(joints);//é—­æ“ä½œ
     //imshow("joints", joints);
 
     joints = preprocess(src, joints, 11, 130);
@@ -129,7 +129,7 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
 }
 
 /// <summary>
-/// OpenCV ¶Ô±È¶ÈÊÜÏŞµÄ×ÔÊÊÓ¦Ö±·½Í¼¾ùºâ»¯(CLAHE)Ëã·¨£¬°üÀ¨ÒÔÏÂÈı¸ö
+/// OpenCV å¯¹æ¯”åº¦å—é™çš„è‡ªé€‚åº”ç›´æ–¹å›¾å‡è¡¡åŒ–(CLAHE)ç®—æ³•ï¼ŒåŒ…æ‹¬ä»¥ä¸‹ä¸‰ä¸ª
 /// </summary>
 /// <param name="input"></param>
 /// <param name="chls"></param>
@@ -154,10 +154,10 @@ cv::Mat clahe_deal(cv::Mat& src)
 
     cv::Mat clahe_img;
     cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
-    // Ö±·½Í¼µÄÖù×Ó¸ß¶È´óÓÚ¼ÆËãºóµÄClipLimitµÄ²¿·Ö±»²Ã¼ôµô£¬È»ºó½«ÆäÆ½¾ù·ÖÅä¸øÕûÕÅÖ±·½Í¼
-    // ´Ó¶øÌáÉıÕû¸öÍ¼Ïñ
+    // ç›´æ–¹å›¾çš„æŸ±å­é«˜åº¦å¤§äºè®¡ç®—åçš„ClipLimitçš„éƒ¨åˆ†è¢«è£å‰ªæ‰ï¼Œç„¶åå°†å…¶å¹³å‡åˆ†é…ç»™æ•´å¼ ç›´æ–¹å›¾
+    // ä»è€Œæå‡æ•´ä¸ªå›¾åƒ
     clahe->setClipLimit(4.);    // (int)(4.*(8*8)/256)
-    clahe->setTilesGridSize(Size(8, 8)); // ½«Í¼Ïñ·ÖÎª8*8¿é
+    clahe->setTilesGridSize(Size(8, 8)); // å°†å›¾åƒåˆ†ä¸º8*8å—
     clahe->apply(channels[0], clahe_img);
     channels[0].release();
     clahe_img.copyTo(channels[0]);
@@ -165,10 +165,10 @@ cv::Mat clahe_deal(cv::Mat& src)
     return ycrcb;
 }
 /// <summary>
-/// ÑÚÄ¤²Ù×÷£¬ÀûÓÃmaskimage¶Ôsrc¿ÙÍ¼
+/// æ©è†œæ“ä½œï¼Œåˆ©ç”¨maskimageå¯¹srcæŠ å›¾
 /// </summary>
-/// <param name="src Ô­Ê¼Í¼Ïñ"></param>
-/// <param name="maskimage ÑÚÄ¤"></param>
+/// <param name="src åŸå§‹å›¾åƒ"></param>
+/// <param name="maskimage æ©è†œ"></param>
 /// <returns></returns>
 Mat mask(Mat src,Mat maskimage) {
     int rowNumber = src.rows;
@@ -186,21 +186,21 @@ Mat mask(Mat src,Mat maskimage) {
 }
 
 /**
-* @brief ¶ÔÊäÈëÍ¼Ïñ½øĞĞÏ¸»¯,¹Ç÷À»¯
-* @param srcÎªÊäÈëÍ¼Ïñ,ÓÃcvThresholdº¯Êı´¦Àí¹ıµÄ8Î»»Ò¶ÈÍ¼Ïñ¸ñÊ½£¬ÔªËØÖĞÖ»ÓĞ0Óë1,1´ú±íÓĞÔªËØ£¬0´ú±íÎª¿Õ°×
-* @param dstÎªÊä³öÍ¼Ïñ
-* @return Îª¶ÔsrcÏ¸»¯ºóµÄÊä³öÍ¼Ïñ,¸ñÊ½Óësrc¸ñÊ½ÏàÍ¬£¬ÔªËØÖĞÖ»ÓĞ0Óë1,1´ú±íÓĞÔªËØ£¬0´ú±íÎª¿Õ°×
+* @brief å¯¹è¾“å…¥å›¾åƒè¿›è¡Œç»†åŒ–,éª¨éª¼åŒ–
+* @param srcä¸ºè¾“å…¥å›¾åƒ,ç”¨cvThresholdå‡½æ•°å¤„ç†è¿‡çš„8ä½ç°åº¦å›¾åƒæ ¼å¼ï¼Œå…ƒç´ ä¸­åªæœ‰0ä¸1,1ä»£è¡¨æœ‰å…ƒç´ ï¼Œ0ä»£è¡¨ä¸ºç©ºç™½
+* @param dstä¸ºè¾“å‡ºå›¾åƒ
+* @return ä¸ºå¯¹srcç»†åŒ–åçš„è¾“å‡ºå›¾åƒ,æ ¼å¼ä¸srcæ ¼å¼ç›¸åŒï¼Œå…ƒç´ ä¸­åªæœ‰0ä¸1,1ä»£è¡¨æœ‰å…ƒç´ ï¼Œ0ä»£è¡¨ä¸ºç©ºç™½
 */
 void cvHilditchThin1(cv::Mat& src, cv::Mat& dst)
 {
     //http://cgm.cs.mcgill.ca/~godfried/teaching/projects97/azar/skeleton.html#algorithm
-    //Ëã·¨ÓĞÎÊÌâ£¬µÃ²»µ½ÏëÒªµÄĞ§¹û
+    //ç®—æ³•æœ‰é—®é¢˜ï¼Œå¾—ä¸åˆ°æƒ³è¦çš„æ•ˆæœ
     if (src.type() != CV_8UC1)
     {
-        printf("Ö»ÄÜ´¦Àí¶şÖµ»ò»Ò¶ÈÍ¼Ïñ\n");
+        printf("åªèƒ½å¤„ç†äºŒå€¼æˆ–ç°åº¦å›¾åƒ\n");
         return;
     }
-    //·ÇÔ­µØ²Ù×÷Ê±ºò£¬copy srcµ½dst
+    //éåŸåœ°æ“ä½œæ—¶å€™ï¼Œcopy srcåˆ°dst
     if (dst.data != src.data)
     {
         src.copyTo(dst);
@@ -208,7 +208,7 @@ void cvHilditchThin1(cv::Mat& src, cv::Mat& dst)
 
     int i, j;
     int width, height;
-    //Ö®ËùÒÔ¼õ2£¬ÊÇ·½±ã´¦Àí8ÁÚÓò£¬·ÀÖ¹Ô½½ç
+    //ä¹‹æ‰€ä»¥å‡2ï¼Œæ˜¯æ–¹ä¾¿å¤„ç†8é‚»åŸŸï¼Œé˜²æ­¢è¶Šç•Œ
     width = src.cols - 2;
     height = src.rows - 2;
     int step = src.step;
@@ -231,35 +231,35 @@ void cvHilditchThin1(cv::Mat& src, cv::Mat& dst)
                 A1 = 0;
                 if (p[0] > 0)
                 {
-                    if (p[-step] == 0 && p[-step + 1] > 0) //p2,p3 01Ä£Ê½
+                    if (p[-step] == 0 && p[-step + 1] > 0) //p2,p3 01æ¨¡å¼
                     {
                         A1++;
                     }
-                    if (p[-step + 1] == 0 && p[1] > 0) //p3,p4 01Ä£Ê½
+                    if (p[-step + 1] == 0 && p[1] > 0) //p3,p4 01æ¨¡å¼
                     {
                         A1++;
                     }
-                    if (p[1] == 0 && p[step + 1] > 0) //p4,p5 01Ä£Ê½
+                    if (p[1] == 0 && p[step + 1] > 0) //p4,p5 01æ¨¡å¼
                     {
                         A1++;
                     }
-                    if (p[step + 1] == 0 && p[step] > 0) //p5,p6 01Ä£Ê½
+                    if (p[step + 1] == 0 && p[step] > 0) //p5,p6 01æ¨¡å¼
                     {
                         A1++;
                     }
-                    if (p[step] == 0 && p[step - 1] > 0) //p6,p7 01Ä£Ê½
+                    if (p[step] == 0 && p[step - 1] > 0) //p6,p7 01æ¨¡å¼
                     {
                         A1++;
                     }
-                    if (p[step - 1] == 0 && p[-1] > 0) //p7,p8 01Ä£Ê½
+                    if (p[step - 1] == 0 && p[-1] > 0) //p7,p8 01æ¨¡å¼
                     {
                         A1++;
                     }
-                    if (p[-1] == 0 && p[-step - 1] > 0) //p8,p9 01Ä£Ê½
+                    if (p[-1] == 0 && p[-step - 1] > 0) //p8,p9 01æ¨¡å¼
                     {
                         A1++;
                     }
-                    if (p[-step - 1] == 0 && p[-step] > 0) //p9,p2 01Ä£Ê½
+                    if (p[-step - 1] == 0 && p[-step] > 0) //p9,p2 01æ¨¡å¼
                     {
                         A1++;
                     }
@@ -271,7 +271,7 @@ void cvHilditchThin1(cv::Mat& src, cv::Mat& dst)
                     p7 = p[step - 1] > 0 ? 1 : 0;
                     p8 = p[-1] > 0 ? 1 : 0;
                     p9 = p[-step - 1] > 0 ? 1 : 0;
-                    //¼ÆËãAP2,AP4
+                    //è®¡ç®—AP2,AP4
                     int A2, A4;
                     A2 = 0;
                     //if(p[-step]>0)
@@ -307,7 +307,7 @@ void cvHilditchThin1(cv::Mat& src, cv::Mat& dst)
                     {
                         if (((p2 == 0 || p4 == 0 || p8 == 0) || A2 != 1) && ((p2 == 0 || p4 == 0 || p6 == 0) || A4 != 1))
                         {
-                            dst.at<uchar>(i, j) = 0; //Âú×ãÉ¾³ıÌõ¼ş£¬ÉèÖÃµ±Ç°ÏñËØÎª0
+                            dst.at<uchar>(i, j) = 0; //æ»¡è¶³åˆ é™¤æ¡ä»¶ï¼Œè®¾ç½®å½“å‰åƒç´ ä¸º0
                             ifEnd = true;
                             //printf("\n");
 
@@ -320,16 +320,16 @@ void cvHilditchThin1(cv::Mat& src, cv::Mat& dst)
         //printf("\n");
         //PrintMat(dst);
         //PrintMat(dst);
-        //ÒÑ¾­Ã»ÓĞ¿ÉÒÔÏ¸»¯µÄÏñËØÁË£¬ÔòÍË³öµü´ú
+        //å·²ç»æ²¡æœ‰å¯ä»¥ç»†åŒ–çš„åƒç´ äº†ï¼Œåˆ™é€€å‡ºè¿­ä»£
         if (!ifEnd) break;
     }
 }
 /// <summary>
-/// È¥³ıÖĞĞÄ¹â°ß
+/// å»é™¤ä¸­å¿ƒå…‰æ–‘
 /// </summary>
-/// <param name="src Ô­Í¼Ïñ"></param>
-/// <param name="kernal ´óĞ¡ÎªKsize*Ksize"></param>
-/// <param name="H ãĞÖµ "></param>
+/// <param name="src åŸå›¾åƒ"></param>
+/// <param name="kernal å¤§å°ä¸ºKsize*Ksize"></param>
+/// <param name="H é˜ˆå€¼ "></param>
 /// <returns></returns>
 Mat preprocess(Mat src1, Mat src2, int Ksize, int H) {
     int rowNumber = src1.rows;

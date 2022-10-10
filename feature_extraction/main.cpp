@@ -1,4 +1,4 @@
-
+ï»¿
 #include <opencv2/highgui/highgui.hpp>  
 #include <opencv2/imgproc/imgproc.hpp>  
 #include <opencv2/core/core.hpp> 
@@ -10,29 +10,29 @@
 using namespace cv;
 using namespace std;
 
-//¿Éµ÷²ÎÊı Ë«±ßÂË²¨²ÎÊı£¬¶şÖµ»¯²ÎÊı£¬func2ÖĞ¸¯Ê´Ä£°å´óĞ¡£¬claheËã·¨ÖĞµÄ²ÎÊı
+//å¯è°ƒå‚æ•° åŒè¾¹æ»¤æ³¢å‚æ•°ï¼ŒäºŒå€¼åŒ–å‚æ•°ï¼Œfunc2ä¸­è…èš€æ¨¡æ¿å¤§å°ï¼Œclaheç®—æ³•ä¸­çš„å‚æ•°
 
 
 
 int main(int argc, char* argv[])
 {
-    Mat image_L = imread("C:/Users/DELL/Desktop/×ã²¿½á¹¹¹â/ÕÕÆ¬/10.1/side_50x50_right.jpg", IMREAD_GRAYSCALE);
-    Mat image_R = imread("C:/Users/DELL/Desktop/×ã²¿½á¹¹¹â/ÕÕÆ¬/10.1/side_50x50_left.jpg", IMREAD_GRAYSCALE);
+    Mat image_L = imread("C:/Users/DELL/Desktop/è¶³éƒ¨ç»“æ„å…‰/ç…§ç‰‡/10.1/side_50x50_right.jpg", IMREAD_GRAYSCALE);
+    Mat image_R = imread("C:/Users/DELL/Desktop/è¶³éƒ¨ç»“æ„å…‰/ç…§ç‰‡/10.1/side_50x50_left.jpg", IMREAD_GRAYSCALE);
     //imshow("image_R", image_R);
-    //resize(image, image, Size(image.cols / 4, image.rows / 4), 0, 0, INTER_NEAREST); //ËõĞ¡Í¼Æ¬  
+    //resize(image, image, Size(image.cols / 4, image.rows / 4), 0, 0, INTER_NEAREST); //ç¼©å°å›¾ç‰‡  
     //image_R = preprocess(image_R, 11, 130);
     //imshow("preprocess", image_R);
 
-    //¼«ÏßĞ£Õı
+    //æçº¿æ ¡æ­£
     Undistort(image_L, image_R, image_L, image_R);
     
-    //»ñÈ¡½»µã
+    //è·å–äº¤ç‚¹
     Mat mat1 = get_joints(image_R, 140, 110);
     Mat mat2 = get_joints(image_L, 140, 110);
     imshow("mat1", mat1);
     imshow("mat2", mat2);
 
-    //½»µã½øĞĞÆ¥Åä
+    //äº¤ç‚¹è¿›è¡ŒåŒ¹é…
     sift(image_R, image_L, mat1, mat2);
 
     cv::waitKey(0);
