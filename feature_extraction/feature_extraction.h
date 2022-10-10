@@ -14,4 +14,6 @@ static void color_transfer_with_spilt(cv::Mat& input, std::vector<cv::Mat>& chls
 cv::Mat clahe_deal(cv::Mat& src);
 Mat mask(Mat src, Mat maskimage);
 void cvHilditchThin1(cv::Mat& src, cv::Mat& dst);
+Mat preprocess(Mat src1, Mat src2, int Ksize, int H);
+
 #endif 

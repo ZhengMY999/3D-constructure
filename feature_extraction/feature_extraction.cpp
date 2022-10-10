@@ -40,7 +40,7 @@ Mat close_operation(Mat src,int method=2,int ksize=3) {   // 闭操作
     dilate(src, temp, kernel);
     erode(temp, dst, kernel);
 
-    imshow("Final Result", dst);
+    //imshow("闭操作后结果", dst);
     return dst;
 }
 /// <summary>
@@ -53,9 +53,10 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     GaussianBlur(src, src, Size(5, 5), 1);   //高斯滤波
     adaptiveThreshold(src, binImg, 255,
         ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);  //原始值-2
+
     
     binImg= close_operation(binImg);//闭操作
-    imshow("binary image", binImg);
+    //imshow("binary image", binImg);
 
 
     //使用二值化后的图像来获取表格横纵的线
@@ -76,7 +77,7 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     dilate(horizontal, horizontal, horizontalStructure, Point(-1, -1));
     horizontal = close_operation(horizontal,0,5);//闭操作
     horizontal = close_operation(horizontal, 0, 7);//闭操作
-    imshow("horizontal", horizontal);
+    //imshow("horizontal", horizontal);
 
     int verticalsize = vertical.rows / scale_V;
     Mat verticalStructure = getStructuringElement(MORPH_RECT, Size(1, verticalsize));
@@ -84,7 +85,7 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     dilate(vertical, vertical, verticalStructure, Point(-1, -1));
     vertical = close_operation(vertical, 1, 5);//闭操作
     vertical = close_operation(vertical, 1, 7);//闭操作
-    imshow("vertical", vertical);
+    //imshow("vertical", vertical);
 
    
     /*Mat dst1;                        //利用掩膜操作对原始图像光条进行提取
@@ -98,26 +99,32 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     //图像细化，骨骼化  
     cv::Mat dst1;
     cvHilditchThin1(horizontal, dst1);
-    imshow("dst1", dst1);
+    //imshow("dst1", dst1);
     cv::Mat dst2;
     cvHilditchThin1(vertical, dst2);
-    imshow("dst2", dst2);
+    //imshow("dst2", dst2);
 
-
+    
 
     Mat mask = horizontal + vertical;
     mask = dst1 + dst2;
     mask = mask + src;
-    imshow("src", src);
-    imshow("mask", mask);
+    //imshow("src", src);
 
+    //imshow("mask", mask);
+
+    
 
     Mat joints;   //获取交点
     bitwise_and(horizontal, vertical, joints);
     bitwise_and(dst1, dst2, joints);
 
     joints = close_operation(joints);//闭操作
-    imshow("joints", joints);
+    //imshow("joints", joints);
+
+    joints = preprocess(src, joints, 11, 130);
+
+
     return joints;
 }
 
@@ -316,4 +323,34 @@ void cvHilditchThin1(cv::Mat& src, cv::Mat& dst)
         //已经没有可以细化的像素了，则退出迭代
         if (!ifEnd) break;
     }
+}
+/// <summary>
+/// 去除中心光斑
+/// </summary>
+/// <param name="src 原图像"></param>
+/// <param name="kernal 大小为Ksize*Ksize"></param>
+/// <param name="H 阈值 "></param>
+/// <returns></returns>
+Mat preprocess(Mat src1, Mat src2, int Ksize, int H) {
+    int rowNumber = src1.rows;
+    int colNumber = src1.cols;
+    Mat image = src1.clone();
+    Mat image2 = src2.clone();
+    for (int i = Ksize / 2; i < rowNumber - Ksize / 2; i++)
+    {
+        for (int j = Ksize / 2; j < colNumber - Ksize / 2; j++)
+        {
+            int mean = 0;
+            for (int a = -Ksize / 2; a < Ksize / 2; a++)
+                for (int b = -Ksize / 2; b < Ksize / 2; b++)
+                    mean += image.at<uchar>(i + a, j + b) / (Ksize * Ksize);
+            if (mean > H) {
+                for (int a = -Ksize / 2; a < Ksize / 2; a++)
+                    for (int b = -Ksize / 2; b < Ksize / 2; b++)
+                        image2.at<uchar>(i + a, j + b) = 0;
+            }
+
+        }
+    }
+    return image2;
 }
