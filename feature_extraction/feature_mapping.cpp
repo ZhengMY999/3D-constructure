@@ -135,7 +135,7 @@ void sift(Mat image1, Mat image2,Mat image3,Mat image4) {
     //drawMatches(image1, keypoints1, image2, keypoints2, matches, img_matches_bf);
     //imshow("bf_matches", img_matches_bf);
     
-    
+    /*
     //KNN 匹配
     std::vector<std::vector<DMatch> > knn_matches;
     const float ratio_thresh = 0.7f;
@@ -156,7 +156,7 @@ void sift(Mat image1, Mat image2,Mat image3,Mat image4) {
         cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
     cv::imshow("knn_matches", img_matches_knn);
     //cv::waitKey(0);
-    
+    */
 
 
     //画出找到的特征点
@@ -381,10 +381,15 @@ void sift(Mat image1, Mat image2,Mat image3,Mat image4) {
   
     weakFeature_mapping(RR_matches, joint_keypoints3, joint_keypoints4, joint_keypoints1, joint_keypoints2);
     printf("joint_keypoints1  %d\n", joint_keypoints1.size());
-    while (joint_keypoints1.size() > 735) {
+    int last_point_number= joint_keypoints1.size()+10;
+    while (1) {   //重复以上过程，将强特征点附近的弱特征点进行匹配
         weakFeature_mapping(RR_matches, joint_keypoints3, joint_keypoints4, joint_keypoints1, joint_keypoints2);
         printf("joint_keypoints1  %d\n", joint_keypoints1.size());
         RR_matches = RANSAC_demo(image3, image4, joint_keypoints3, joint_keypoints4, RR_matches);
+        //
+        if (last_point_number == joint_keypoints1.size())    //强特征点无法增加时，结束
+            break;
+        last_point_number = joint_keypoints1.size();
     }
     RR_matches = RANSAC_demo(image3, image4, joint_keypoints3, joint_keypoints4, RR_matches);
 
@@ -700,12 +705,14 @@ void Undistort(Mat src1, Mat src2, Mat &dst1, Mat &dst2) {
 
     cv::hconcat(src1, src2, merge); //图像拼接
     //imwrite("../merge.jpg", merge);
-    //resize(src1, src1, Size(src1.cols / 4, src1.rows / 4), 0, 0, INTER_NEAREST); //缩小图片
-    //resize(src2, src2, Size(src2.cols / 4, src2.rows / 4), 0, 0, INTER_NEAREST); //缩小图片
+    //resize(src1, src1, Size(src1.cols / 4, src1.rows / 4), 0, 0, INTER_NEAREST); //缩小图片  
+    //resize(src2, src2, Size(src2.cols / 4, src2.rows / 4), 0, 0, INTER_NEAREST); //缩小图片  
     resize(merge, merge, Size(merge.cols / 4, merge.rows / 4), 0, 0, INTER_NEAREST); //缩小图片
-    imshow("src1", src1);
-    imshow("src2", src2);
-    imshow("merge", merge);
+    //imshow("src1", src1);
+    //imshow("src2", src2);
+    //imshow("merge", merge);
+    //imwrite("../src1.jpg", src1);
+    //imwrite("../src2.jpg", src2);
 
     dst1 = src1;
     dst2 = src2;

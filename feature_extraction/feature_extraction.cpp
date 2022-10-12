@@ -69,7 +69,8 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     //int scale_V = 100; //这个值越大，检测到的竖线越多
 
 
-    int horizontalsize = horizontal.cols / scale_H;
+    //int horizontalsize = horizontal.cols / scale_H;
+    int horizontalsize = scale_H;
     // 为了获取横向的表格线，设置腐蚀和膨胀的操作区域为一个比较大的横向直条
     Mat horizontalStructure = getStructuringElement(MORPH_RECT, Size(horizontalsize, 1));
     // 先腐蚀再膨胀
@@ -79,7 +80,8 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     horizontal = close_operation(horizontal, 0, 7);//闭操作
     //imshow("horizontal", horizontal);
 
-    int verticalsize = vertical.rows / scale_V;
+    //int verticalsize = vertical.rows / scale_V;
+    int verticalsize =  scale_V;
     Mat verticalStructure = getStructuringElement(MORPH_RECT, Size(1, verticalsize));
     erode(vertical, vertical, verticalStructure, Point(-1, -1));
     dilate(vertical, vertical, verticalStructure, Point(-1, -1));
@@ -99,10 +101,10 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     //图像细化，骨骼化  
     cv::Mat dst1;
     cvHilditchThin1(horizontal, dst1);
-    //imshow("dst1", dst1);
+    imshow("dst1", dst1);
     cv::Mat dst2;
     cvHilditchThin1(vertical, dst2);
-    //imshow("dst2", dst2);
+    imshow("dst2", dst2);
 
     
 
