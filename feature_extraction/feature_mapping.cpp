@@ -104,9 +104,15 @@ void sift(Mat image1, Mat image2,Mat image3,Mat image4) {
 
     std::vector<cv::KeyPoint> joint_keypoints1;
     std::vector<cv::KeyPoint> joint_keypoints2;
-    Ptr<ORB> orb = ORB::create(500, 1.2f, 8, 31, 0, 2, ORB::HARRIS_SCORE, 31, 20);
+    Ptr<ORB> orb = ORB::create(400, 1.2f, 8, 31, 0, 2, ORB::HARRIS_SCORE, 31, 20);
     orb->detect(image3, joint_keypoints1);
     orb->detect(image4, joint_keypoints2);
+    //去除临近稠密特征点
+    simplify_point(joint_keypoints1,30);
+    simplify_point(joint_keypoints2,30);
+    printf("joint_keypoints1=%d \n",joint_keypoints1.size());
+    printf("joint_keypoints2=%d \n", joint_keypoints2.size());
+
 
    //计算匹配符
     //
@@ -118,6 +124,7 @@ void sift(Mat image1, Mat image2,Mat image3,Mat image4) {
     tdes = 1000.0 * (t2 - t1) / cv::getTickFrequency();
     sift->compute(image2, keypoints2, descriptors2);
     //imshow("descriptors1", descriptors1);
+    printf("descriptors compute finished\n");
 
     // 4. 特征匹配
     cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::BRUTEFORCE);
@@ -134,7 +141,9 @@ void sift(Mat image1, Mat image2,Mat image3,Mat image4) {
     cv::Mat img_matches_bf;
     //drawMatches(image1, keypoints1, image2, keypoints2, matches, img_matches_bf);
     //imshow("bf_matches", img_matches_bf);
-    
+
+    printf("matches finished\n");
+
     /*
     //KNN 匹配
     std::vector<std::vector<DMatch> > knn_matches;
@@ -471,6 +480,17 @@ int find_nearestpoint(int x, int y, std::vector<float> point_x, std::vector<floa
     }
     return nearest;
 }
+int find_nearestpoint(int x, int y, std::vector<cv::KeyPoint> joint_keypoints) {
+    int nearest = 0;
+    float distance = (joint_keypoints[0].pt.x - x) * (joint_keypoints[0].pt.x - x) + (joint_keypoints[0].pt.y - y) * (joint_keypoints[0].pt.y - y);
+    for (int i = 0; i < joint_keypoints.size(); i++) {
+        if ((joint_keypoints[i].pt.x - x) * (joint_keypoints[i].pt.x - x) + (joint_keypoints[i].pt.y - y) * (joint_keypoints[i].pt.y - y) < distance) {
+            distance = (joint_keypoints[i].pt.x - x) * (joint_keypoints[i].pt.x - x) + (joint_keypoints[i].pt.y - y) * (joint_keypoints[i].pt.y - y);
+            nearest = i;
+        }
+    }
+    return nearest;
+}
 
 /// <summary>
 /// 根据已知强特征点匹配，进行弱特征点匹配
@@ -716,4 +736,26 @@ void Undistort(Mat src1, Mat src2, Mat &dst1, Mat &dst2) {
 
     dst1 = src1;
     dst2 = src2;
+}
+/// <summary>
+/// 简化稠密区域特征点
+/// </summary>
+/// <param name="joint_keypoints"></param>
+/// <param name="threshold  两点之间距离小于该阈值，则被简化为一点"></param>
+void simplify_point(std::vector<cv::KeyPoint> &joint_keypoints,float threshold) {
+    for (int i = 0; i < joint_keypoints.size()-2; i++) {
+        std::vector<cv::KeyPoint> points(joint_keypoints.begin()+i+1, joint_keypoints.end());
+        int n= find_nearestpoint(joint_keypoints[i].pt.x, joint_keypoints[i].pt.y, points) + i + 1;
+        //printf("n=%d \n",n);
+        //printf("i=%d \n", i);
+        if (n <joint_keypoints.size() && (sqrt(joint_keypoints[i].pt.x - joint_keypoints[n].pt.x) + sqrt(joint_keypoints[i].pt.y - joint_keypoints[n].pt.y) )< threshold) {
+            //joint_keypoints[i].pt.x = (joint_keypoints[i].pt.x + joint_keypoints[n].pt.x) / 2;
+            //joint_keypoints[i].pt.y = (joint_keypoints[i].pt.y + joint_keypoints[n].pt.y) / 2;
+            //删除稠密点
+            auto iter = joint_keypoints.begin()+n;
+            joint_keypoints.erase(iter);
+            i--;
+        }   
+        //printf("joint_keypoints.size()=%d \n", joint_keypoints.size());
+    }
 }

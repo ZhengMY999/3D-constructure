@@ -31,8 +31,8 @@ int main(int argc, char* argv[])
     image_R = image_R(react2);
 
     //获取交点
-    Mat mat1 = get_joints(image_R, 5, 5);
-    Mat mat2 = get_joints(image_L, 5, 5);
+    Mat mat1 = get_joints(image_R, 8, 8);
+    Mat mat2 = get_joints(image_L, 8, 8);
     imshow("mat1", mat1);
     imshow("mat2", mat2);
 
