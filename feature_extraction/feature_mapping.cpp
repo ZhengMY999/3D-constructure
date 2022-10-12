@@ -700,8 +700,8 @@ void Undistort(Mat src1, Mat src2, Mat &dst1, Mat &dst2) {
 
     cv::hconcat(src1, src2, merge); //图像拼接
     //imwrite("../merge.jpg", merge);
-    resize(src1, src1, Size(src1.cols / 4, src1.rows / 4), 0, 0, INTER_NEAREST); //缩小图片  
-    resize(src2, src2, Size(src2.cols / 4, src2.rows / 4), 0, 0, INTER_NEAREST); //缩小图片  
+    resize(src1, src1, Size(src1.cols / 4, src1.rows / 4), 0, 0, INTER_NEAREST); //缩小图片
+    resize(src2, src2, Size(src2.cols / 4, src2.rows / 4), 0, 0, INTER_NEAREST); //缩小图片
     resize(merge, merge, Size(merge.cols / 4, merge.rows / 4), 0, 0, INTER_NEAREST); //缩小图片
     imshow("src1", src1);
     imshow("src2", src2);
