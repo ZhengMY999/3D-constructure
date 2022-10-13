@@ -8,7 +8,7 @@
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/core/core.hpp>
 #include <iostream>
-#include "thinImage.h"
+#include "../feature_extraction/thinImage.h"
 
 using namespace std;
 using namespace cv;
@@ -166,8 +166,8 @@ void sift(Mat image1, Mat image2) {
 }
 int main() {
 
-    Mat image_left = imread("/home/wangzha/Desktop/3D-constructure/resources/left.bmp", IMREAD_GRAYSCALE);
-    Mat image_right = imread("/home/wangzha/Desktop/3D-constructure/resources/right.bmp", IMREAD_GRAYSCALE);
+    Mat image_left = imread("/home/wangzha/Desktop/3D-constructure/resources/side_50x50_left.jpg", IMREAD_GRAYSCALE);
+    Mat image_right = imread("/home/wangzha/Desktop/3D-constructure/resources/side_50x50_right.jpg", IMREAD_GRAYSCALE);
 
     // binary image pictures
     adaptiveThreshold(image_left, image_left, 255,ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 15, -2);

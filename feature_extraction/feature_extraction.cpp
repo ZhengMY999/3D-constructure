@@ -1,4 +1,5 @@
 ﻿#include "feature_extraction.h"
+#include "thinImage.h"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
@@ -98,7 +99,9 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     dst2 = mask(src, vertical);
     imshow("vertical", dst2);
 */
-    //图像细化，骨骼化  
+    //图像细化，骨骼化
+
+
     cv::Mat dst1;
     cvHilditchThin1(horizontal, dst1);
     imshow("dst1", dst1);
@@ -110,10 +113,7 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
 
     Mat mask = horizontal + vertical;
     mask = dst1 + dst2;
-    mask = mask + src;
-    //imshow("src", src);
 
-    //imshow("mask", mask);
 
     
 
@@ -122,7 +122,7 @@ Mat get_joints(Mat src, int scale_H, int scale_V) {
     bitwise_and(dst1, dst2, joints);
 
     joints = close_operation(joints);//闭操作
-    //imshow("joints", joints);
+
 
     joints = preprocess(src, joints, 11, 130);
 
@@ -356,3 +356,4 @@ Mat preprocess(Mat src1, Mat src2, int Ksize, int H) {
     }
     return image2;
 }
+

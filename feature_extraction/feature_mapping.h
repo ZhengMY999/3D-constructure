@@ -21,4 +21,5 @@ void weakFeature_mapping(std::vector<DMatch> &RR_matches, std::vector<cv::KeyPoi
 int vector_find(std::vector<cv::KeyPoint> points, cv::KeyPoint point);
 void Undistort(Mat src1, Mat src2, Mat& dst1, Mat& dst2);
 void simplify_point(std::vector<cv::KeyPoint> &joint_keypoints, float threshold = 1);
+void surf(Mat imageL, Mat imageR,Mat image3,Mat image4);
 #endif //FEATURE_MAPPING_FEATURE_MAPPING_H

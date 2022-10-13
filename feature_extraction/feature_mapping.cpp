@@ -12,7 +12,7 @@
 #include <opencv2/xfeatures2d.hpp>
 #include "opencv2/calib3d/calib3d.hpp"
 #include <algorithm>
-
+#include<cmath>
 
 using namespace std;
 using namespace cv;
@@ -88,330 +88,141 @@ void sift(Mat image1, Mat image2,Mat image3,Mat image4) {
     int64 t1=0, t2=0;
     double tkpt, tdes, tmatch_bf, tmatch_knn;
 
-    // 1. 读取图片
-    //const cv::Mat image1 = cv::imread("../../images/1.png", 0); //Load as grayscale
-    //const cv::Mat image2 = cv::imread("../../images/2.png", 0); //Load as grayscale
+
     std::vector<cv::KeyPoint> keypoints1;
     std::vector<cv::KeyPoint> keypoints2;
 
+
     Ptr<cv::SiftFeatureDetector> sift = cv::SiftFeatureDetector::create();
+
     // 2. 计算特征点
-    t1 = cv::getTickCount();
+
     sift->detect(image1, keypoints1);
-    t2 = cv::getTickCount();
-    tkpt = 1000.0 * (t2 - t1) / cv::getTickFrequency();
     sift->detect(image2, keypoints2);
 
-    std::vector<cv::KeyPoint> joint_keypoints1;
-    std::vector<cv::KeyPoint> joint_keypoints2;
-    Ptr<ORB> orb = ORB::create(400, 1.2f, 8, 31, 0, 2, ORB::HARRIS_SCORE, 31, 20);
-    orb->detect(image3, joint_keypoints1);
-    orb->detect(image4, joint_keypoints2);
-    //去除临近稠密特征点
-    simplify_point(joint_keypoints1,30);
-    simplify_point(joint_keypoints2,30);
-    printf("joint_keypoints1=%d \n",joint_keypoints1.size());
-    printf("joint_keypoints2=%d \n", joint_keypoints2.size());
+    Mat feature_pic1,feature_pic2;
+    drawKeypoints(image1,keypoints1,feature_pic1,Scalar::all(-1));
+    drawKeypoints(image2,keypoints2,feature_pic2,Scalar::all(-1));
+
+    cout<<keypoints1.size()<<endl;
+    cout<<keypoints2.size()<<endl;
 
 
    //计算匹配符
     //
     Mat descriptors1;
     Mat descriptors2;
-    t1 = cv::getTickCount();
-    sift->compute(image1, keypoints1, descriptors1);
-    t2 = cv::getTickCount();
-    tdes = 1000.0 * (t2 - t1) / cv::getTickFrequency();
-    sift->compute(image2, keypoints2, descriptors2);
-    //imshow("descriptors1", descriptors1);
-    printf("descriptors compute finished\n");
+
+    sift->compute(image1,keypoints1,descriptors1);
+    sift->compute(image2,keypoints2,descriptors2);
 
     // 4. 特征匹配
     cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::BRUTEFORCE);
-    // cv::BFMatcher matcher(cv::NORM_L2);
 
-    // (1) 直接暴力匹配
-    
     std::vector<cv::DMatch> matches;
-    t1 = cv::getTickCount();
     matcher->match(descriptors1, descriptors2, matches);
-    t2 = cv::getTickCount();
-    tmatch_bf = 1000.0 * (t2 - t1) / cv::getTickFrequency();
+
+    double max_dist=0, min_dist=100;
+    for (int i=0; i< descriptors1.rows;i++){
+        if (matches.at(i).distance > max_dist)
+            max_dist= matches.at(i).distance;
+        if (matches.at(i).distance < min_dist)
+            min_dist= matches.at(i).distance;
+    }
+
+    vector<DMatch> good_matches;
+    for (int i=0; i< descriptors1.rows;i++){
+        int x1 =keypoints1[matches[i].queryIdx].pt.x;
+        int x2=keypoints2[matches[i].trainIdx].pt.x;
+
+        int y1 =keypoints1[matches[i].queryIdx].pt.y;
+        int y2=keypoints2[matches[i].trainIdx].pt.y;
+
+        if(abs(y2-y1)<=20){
+            if (matches.at(i).distance < 3*min_dist)
+                good_matches.push_back(matches[i]);
+        }
+
+    }
     // 画匹配图
     cv::Mat img_matches_bf;
-    //drawMatches(image1, keypoints1, image2, keypoints2, matches, img_matches_bf);
-    //imshow("bf_matches", img_matches_bf);
 
-    printf("matches finished\n");
-
-    /*
-    //KNN 匹配
-    std::vector<std::vector<DMatch> > knn_matches;
-    const float ratio_thresh = 0.7f;
-    std::vector<DMatch> good_matches;
-    t1 = getTickCount();
-    matcher->knnMatch(descriptors1, descriptors2, knn_matches, 2);
-    for (auto& knn_matche : knn_matches) {
-        if (knn_matche[0].distance < ratio_thresh * knn_matche[1].distance) {
-            good_matches.push_back(knn_matche[0]);
-        }
-    }
-    t2 = getTickCount();
-    tmatch_knn = 1000.0 * (t2 - t1) / getTickFrequency();
-
-    // 画匹配图
-    cv::Mat img_matches_knn;
-    drawMatches(image1, keypoints1, image2, keypoints2, good_matches, img_matches_knn, cv::Scalar::all(-1),
-        cv::Scalar::all(-1), std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-    cv::imshow("knn_matches", img_matches_knn);
-    //cv::waitKey(0);
-    */
-
-
-    //画出找到的特征点
-    /*
-    cv::Mat output;
-    cv::drawKeypoints(image1, keypoints1, output);
-    cv::imshow("sift_image1_keypoints",output);
-    cv::drawKeypoints(image2, keypoints2, output);
-    cv::imshow("sift_image2_keypoints", output);
-    */
-
-
-    ///以下为RANSAC消除错误匹配点
-
-    vector<DMatch> RR_matches=RANSAC_demo(image1, image2,keypoints1, keypoints2, matches);
-    
-
-    
-    
-    //以下为通过已知匹配点，建立左右视图中网格点的对应关系
-    // 
-    //先将网格交点特征点存储在向量中
-
-    vector<float> point_x1;
-    vector<float> point_y1;
-    vector<float> point_x2;
-    vector<float> point_y2;
-    for (int i = 0; i < joint_keypoints1.size(); i++) {
-        point_x1.push_back(joint_keypoints1[i].pt.x);
-        point_y1.push_back(joint_keypoints1[i].pt.y);
-    }
-    for (int i = 0; i < joint_keypoints2.size(); i++) {
-        point_x2.push_back(joint_keypoints2[i].pt.x);
-        point_y2.push_back(joint_keypoints2[i].pt.y);
-    }
-
-
-    //'''''''''''将强特征点周围的四个弱特征点进行匹配'''''''''''''
-    //joint_keypoints3,joint_keypoints4存储强特征点周围的弱特征点
-
-    std::vector<cv::KeyPoint> joint_keypoints3;
-    std::vector<cv::KeyPoint> joint_keypoints4;
-    vector<DMatch> joint_matches;
-    for (int i = 0; i < RR_matches.size(); i++) {
-        int x1, x2, y1, y2;
-        int index1, index2;
-
-        //'''''''''''''(x1,y1)  (x2,y2) 是相匹配的两个强特征点的坐标'''''''''''''''
-
-        index1 = RR_matches[i].queryIdx;
-        index2 = RR_matches.at(i).trainIdx;
-        x1=keypoints1[RR_matches[i].queryIdx].pt.x;
-        x2=keypoints2[RR_matches[i].trainIdx].pt.x;
-        y1 = keypoints1[RR_matches[i].queryIdx].pt.y;
-        y2 = keypoints2[RR_matches[i].trainIdx].pt.y;
-        
-        int nearest1= find_nearestpoint(x1,y1, point_x1, point_y1);
-        
-        //''''''''''''''''在图1的交点特征点中寻找与强特征点最近的特征点''''''''''''''''''
-
-        int nearest1_x = point_x1[nearest1];
-        int nearest1_y = point_y1[nearest1];
-        int nearest2_x = x2 + (nearest1_x - x1);
-        int nearest2_y = y2 + (nearest1_y - y1);
-        int nearest2 = find_nearestpoint(nearest2_x, nearest2_y, point_x2, point_y2);
-        //int nearest2 = find_nearestpoint(x2, y2, point_x2, point_y2);
-        float distance= (nearest2_x - point_x2[nearest2]) * (nearest2_x - point_x2[nearest2]) + (nearest2_y - point_y2[nearest2]) * (nearest2_y - point_y2[nearest2]);//对应交点特征点的距离
-        int K_distance = 10;
-        if (distance < K_distance) {
-            //'''''''''该值可更改'''''''''''
-            KeyPoint p1;
-            p1.pt.x = nearest1_x;
-            p1.pt.y = nearest1_y;
-                       
-            KeyPoint p2;
-            p2.pt.x = point_x2[nearest2];
-            p2.pt.y = point_y2[nearest2];
-            
-            int j;
-            for ( j = 0; j < joint_keypoints3.size(); j++) {   //判断是否有重复的
-                if (joint_keypoints3[j].pt == p1.pt && joint_keypoints4[j].pt == p2.pt)
-                    break;
-            }
-            
-            if (j == joint_keypoints3.size()) {
-                joint_keypoints3.push_back(p1);
-                joint_keypoints4.push_back(p2);
-
-                DMatch new_match(joint_keypoints3.size() - 1, joint_keypoints3.size() - 1, distance);
-                joint_matches.push_back(new_match);
-            }
-              
-        }
-        
-        // 寻找其他三个方向的匹配点
-         int nearest11 = find_nearestpoint(x1+(nearest1_x - x1), y1 - (nearest1_y - y1), point_x1, point_y1);
-         int nearest12 = find_nearestpoint(x1 - (nearest1_x - x1), y1 - (nearest1_y - y1), point_x1, point_y1);
-         int nearest13 = find_nearestpoint(x1 - (nearest1_x - x1), y1 + (nearest1_y - y1), point_x1, point_y1);
-
-         int nearest11_x = point_x1[nearest11];
-         int nearest11_y = point_y1[nearest11];
-         int nearest21_x = x2 + (nearest11_x - x1);
-         int nearest21_y = y2 + (nearest11_y - y1);
-         int nearest21 = find_nearestpoint(nearest21_x, nearest21_y, point_x2, point_y2);
-
-         int nearest12_x = point_x1[nearest12];
-         int nearest12_y = point_y1[nearest12];
-         int nearest22_x = x2 + (nearest12_x - x1);
-         int nearest22_y = y2 + (nearest12_y - y1);
-         int nearest22 = find_nearestpoint(nearest22_x, nearest22_y, point_x2, point_y2);
-
-         int nearest13_x = point_x1[nearest13];
-         int nearest13_y = point_y1[nearest13];
-         int nearest23_x = x2 + (nearest13_x - x1);
-         int nearest23_y = y2 + (nearest13_y - y1);
-         int nearest23 = find_nearestpoint(nearest23_x, nearest23_y, point_x2, point_y2);
-
-         int distance1 = (nearest21_x - point_x2[nearest21]) * (nearest21_x - point_x2[nearest21]) + (nearest21_y - point_y2[nearest21]) * (nearest21_y - point_y2[nearest21]);//对应交点特征点的距离
-         int distance2 = (nearest22_x - point_x2[nearest22]) * (nearest22_x - point_x2[nearest22]) + (nearest22_y - point_y2[nearest22]) * (nearest22_y - point_y2[nearest22]);//对应交点特征点的距离
-         int distance3 = (nearest23_x - point_x2[nearest23]) * (nearest23_x - point_x2[nearest23]) + (nearest23_y - point_y2[nearest23]) * (nearest23_y - point_y2[nearest23]);//对应交点特征点的距离
-
-        if (distance < K_distance) {
-            //'''''''''该值可更改'''''''''''
-            KeyPoint p1;
-            p1.pt.x = nearest11_x;
-            p1.pt.y = nearest11_y;
-
-            KeyPoint p2;
-            p2.pt.x = point_x2[nearest21];
-            p2.pt.y = point_y2[nearest21];
-
-            int j;
-            for (j = 0; j < joint_keypoints3.size(); j++) {   //判断是否有重复的
-                if (joint_keypoints3[j].pt == p1.pt && joint_keypoints4[j].pt == p2.pt)
-                    break;
-            }
-
-            if (j == joint_keypoints3.size()) {
-                joint_keypoints3.push_back(p1);
-                joint_keypoints4.push_back(p2);
-
-                DMatch new_match(joint_keypoints3.size() - 1, joint_keypoints3.size() - 1, distance1);
-                joint_matches.push_back(new_match);
-            }
-        }
-        if (distance < K_distance) {
-            //'''''''''该值可更改'''''''''''
-            KeyPoint p1;
-            p1.pt.x = nearest12_x;
-            p1.pt.y = nearest12_y;
-
-            KeyPoint p2;
-            p2.pt.x = point_x2[nearest22];
-            p2.pt.y = point_y2[nearest22];
-
-            int j;
-            for (j = 0; j < joint_keypoints3.size(); j++) {   //判断是否有重复的
-                if (joint_keypoints3[j].pt == p1.pt && joint_keypoints4[j].pt == p2.pt)
-                    break;
-            }
-
-            if (j == joint_keypoints3.size()) {
-                joint_keypoints3.push_back(p1);
-                joint_keypoints4.push_back(p2);
-
-                DMatch new_match(joint_keypoints3.size() - 1, joint_keypoints3.size() - 1, distance1);
-                joint_matches.push_back(new_match);
-            }
-        }
-        if (distance < K_distance) {
-            //'''''''''该值可更改'''''''''''
-            KeyPoint p1;
-            p1.pt.x = nearest13_x;
-            p1.pt.y = nearest13_y;
-
-            KeyPoint p2;
-            p2.pt.x = point_x2[nearest23];
-            p2.pt.y = point_y2[nearest23];
-
-            int j;
-            for (j = 0; j < joint_keypoints3.size(); j++) {   //判断是否有重复的
-                if (joint_keypoints3[j].pt == p1.pt && joint_keypoints4[j].pt == p2.pt)
-                    break;
-            }
-
-            if (j == joint_keypoints3.size()) {
-                joint_keypoints3.push_back(p1);
-                joint_keypoints4.push_back(p2);
-
-                DMatch new_match(joint_keypoints3.size() - 1, joint_keypoints3.size() - 1, distance1);
-                joint_matches.push_back(new_match);
-            }
-        }
-
-    }
-    
-    
-    //cv::Mat joint_match;
-    //drawMatches(image3, joint_keypoints3, image4, joint_keypoints4, joint_matches, joint_match);
-    //imshow("joint_match", joint_match);
-    
-    RR_matches = RANSAC_demo(image3, image4, joint_keypoints3, joint_keypoints4, joint_matches);
-
-    
-    //将匹配特征点从网格特征点中去除
-    for (int i = 0; i < joint_keypoints3.size(); i++) {
-        int index = vector_find(joint_keypoints1, joint_keypoints3[i]) ;
-        if (index != joint_keypoints1.size()) {
-            vector<KeyPoint>::iterator it = index + joint_keypoints1.begin();
-            joint_keypoints1.erase(it);
-        }
-    }
-    for (int i = 0; i < joint_keypoints4.size(); i++) {
-        int index = vector_find(joint_keypoints2, joint_keypoints4[i]);
-        if (index != joint_keypoints2.size()) {
-            vector<KeyPoint>::iterator it = index + joint_keypoints2.begin();
-            joint_keypoints2.erase(it);
-        }
-    }
-
-    
-  
-    weakFeature_mapping(RR_matches, joint_keypoints3, joint_keypoints4, joint_keypoints1, joint_keypoints2);
-    printf("joint_keypoints1  %d\n", joint_keypoints1.size());
-    int last_point_number= joint_keypoints1.size()+10;
-    while (1) {   //重复以上过程，将强特征点附近的弱特征点进行匹配
-        weakFeature_mapping(RR_matches, joint_keypoints3, joint_keypoints4, joint_keypoints1, joint_keypoints2);
-        printf("joint_keypoints1  %d\n", joint_keypoints1.size());
-        RR_matches = RANSAC_demo(image3, image4, joint_keypoints3, joint_keypoints4, RR_matches);
-        //
-        if (last_point_number == joint_keypoints1.size())    //强特征点无法增加时，结束
-            break;
-        last_point_number = joint_keypoints1.size();
-    }
-    RR_matches = RANSAC_demo(image3, image4, joint_keypoints3, joint_keypoints4, RR_matches);
 
     cv::Mat output;
-    cv::drawKeypoints(image3, joint_keypoints1, output);
+    drawMatches(image3, keypoints1,image4,keypoints2,good_matches, output);
+    cout<<"final matches result    "<<good_matches.size()<<endl;
     cv::imshow("joint_keypoints1", output);
 
 
-    cv::drawKeypoints(image3, joint_keypoints3, output);
-    cv::imshow("joint_keypoints3", output);
-    cv::drawKeypoints(image4, joint_keypoints4, output);
-    cv::imshow("joint_keypoints4", output);
+
     //需要过滤极度临近的特征点
+}
+
+void surf(Mat imageL, Mat imageR,Mat image3,Mat image4){
+    cv::Ptr<cv::xfeatures2d::SURF> surf = cv::xfeatures2d::SURF::create();
+
+    //特征点
+    std::vector<cv::KeyPoint> keyPointL, keyPointR;
+    //单独提取特征点
+    surf->detect(imageL, keyPointL);
+    surf->detect(imageR, keyPointR);
+
+    //画特征点
+    cv::Mat keyPointImageL;
+    cv::Mat keyPointImageR;
+    drawKeypoints(imageL, keyPointL, keyPointImageL, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    drawKeypoints(imageR, keyPointR, keyPointImageR, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+
+    //显示窗口
+    cv::namedWindow("KeyPoints of imageL");
+    cv::namedWindow("KeyPoints of imageR");
+
+    //显示特征点
+    cv::imshow("KeyPoints of imageL", keyPointImageL);
+    cv::imshow("KeyPoints of imageR", keyPointImageR);
+
+    //特征点匹配
+    cv::Mat despL, despR;
+    //提取特征点并计算特征描述子
+    surf->detectAndCompute(imageL, cv::Mat(), keyPointL, despL);
+    surf->detectAndCompute(imageR, cv::Mat(), keyPointR, despR);
+
+    //Struct for DMatch: query descriptor index, train descriptor index, train image index and distance between descriptors.
+    //int queryIdx –>是测试图像的特征点描述符（descriptor）的下标，同时也是描述符对应特征点（keypoint)的下标。
+    //int trainIdx –> 是样本图像的特征点描述符的下标，同样也是相应的特征点的下标。
+    //int imgIdx –>当样本是多张图像的话有用。
+    //float distance –>代表这一对匹配的特征点描述符（本质是向量）的欧氏距离，数值越小也就说明两个特征点越相像。
+    std::vector<cv::DMatch> matches;
+
+    //如果采用flannBased方法 那么 desp通过orb的到的类型不同需要先转换类型
+    if (despL.type() != CV_32F || despR.type() != CV_32F)
+    {
+        despL.convertTo(despL, CV_32F);
+        despR.convertTo(despR, CV_32F);
+    }
+
+    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("FlannBased");
+    matcher->match(despL, despR, matches);
+
+    //计算特征点距离的最大值
+    double maxDist = 0;
+    for (int i = 0; i < despL.rows; i++)
+    {
+        double dist = matches[i].distance;
+        if (dist > maxDist)
+            maxDist = dist;
+    }
+
+    //挑选好的匹配点
+    std::vector< cv::DMatch > good_matches;
+    for (int i = 0; i < despL.rows; i++)
+    {
+        if (matches[i].distance < 0.5*maxDist)
+        {
+            good_matches.push_back(matches[i]);
+        }
+    }
+
 }
 /// <summary>
 /// RANSAC消除错误匹配点
@@ -697,13 +508,7 @@ int vector_find(std::vector<cv::KeyPoint> points, cv::KeyPoint point) {
     }
     return points.size();
 }
-/// <summary>
-/// 对图像进行极线校正
-/// </summary>
-/// <param name="src1"></param>
-/// <param name="src2"></param>
-/// <param name="dst1"></param>
-/// <param name="dst2"></param>
+
 void Undistort(Mat src1, Mat src2, Mat &dst1, Mat &dst2) {
     //相机内外参数
     Mat matK1 = (Mat_<float>(3, 3) << 2456.38, 0, 1812.75, 0, 2453.20, 1361.87, 0, 0, 1);//左相机相机内参矩阵

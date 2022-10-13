@@ -7,7 +7,8 @@ set( CMAKE_CXX_FLAGS "-std=c++11 -O3" )
 # 添加cmake模块以使用g2o
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
 
-find_package( OpenCV REQUIRED )
+set(OpenCV_DIR "/home/wangzha/Downloads/opencv/build")
+find_package( OpenCV 4.0 REQUIRED ) # use this if in OpenCV2
 # find_package( OpenCV REQUIRED ) # use this if in OpenCV2
 
 include_directories(
@@ -17,7 +18,7 @@ include_directories(
         "/usr/include/eigen3/"
 )
 
-add_executable( feature_mapping feature_mapping.cpp thinImage.cpp thinImage.h)
+add_executable( feature_mapping feature_mapping.cpp ../feature_extraction/thinImage.cpp ../feature_extraction/thinImage.h)
 target_link_libraries( feature_mapping ${OpenCV_LIBS} )
 
 
