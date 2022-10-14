@@ -217,12 +217,23 @@ void surf(Mat imageL, Mat imageR,Mat image3,Mat image4){
     std::vector< cv::DMatch > good_matches;
     for (int i = 0; i < despL.rows; i++)
     {
+        int y1 =keyPointL[matches[i].queryIdx].pt.y;
+        int y2=keyPointR[matches[i].trainIdx].pt.y;
+
+        if(abs(y2-y1)<=20){
         if (matches[i].distance < 0.5*maxDist)
         {
             good_matches.push_back(matches[i]);
-        }
+        }}
     }
+    cv::Mat img_matches_bf;
 
+
+    cv::Mat imageOutput;
+
+    cv::drawMatches(imageL, keyPointL, imageR, keyPointR, good_matches, imageOutput);
+    cout<<"final matches result    "<<good_matches.size()<<endl;
+    cv::imshow("joint_keypoints1", imageOutput);
 }
 /// <summary>
 /// RANSAC消除错误匹配点
